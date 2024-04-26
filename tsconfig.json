@@ -1,11 +1,15 @@
 {
   "compilerOptions": {
+    "target": "esnext",
+    "lib": [
+      "esnext"
+    ],
+    "module": "esnext",
     "outDir": "build",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "moduleResolution": "node",
     "declaration": true,
-    "target": "es5",
     "skipLibCheck": true,
     "strict": true,
     "resolveJsonModule": true

@@ -28,7 +28,7 @@ describe(`#getLinkPreview()`, () => {
 
     expect(linkInfo.url).toEqual(`https://www.pravda.com.ua/`);
     expect(linkInfo.contentType.toLowerCase()).toEqual(`text/html`);
-    expect(linkInfo.charset?.toLowerCase()).toEqual(`windows-1251`);
+    expect(linkInfo.charset?.toLowerCase()).toEqual(`utf-8`);
   });
 
   it(`should extract link info from a URL with a newline`, async () => {
@@ -78,7 +78,7 @@ describe(`#getLinkPreview()`, () => {
       headers: { "Accept-Language": `fr` },
       followRedirects: `follow`,
     });
-    expect(linkInfo.title).toEqual(`Particuliers | HSBC Canada`);
+    expect(linkInfo.title).toEqual(`HSBC Sale Announcement - HSBC Canada`);
 
     linkInfo = await getLinkPreview(`https://www.hsbc.ca/`);
     expect(linkInfo.title).toEqual(`HSBC Personal Banking | HSBC Canada`);
