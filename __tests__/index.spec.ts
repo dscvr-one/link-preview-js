@@ -254,11 +254,25 @@ describe(`#getLinkPreview()`, () => {
     expect(res.favicons.length).toBeGreaterThan(0);
     expect(res.contentType.toLowerCase()).toEqual(`text/html`);
   });
+
+  it("should auto detect mp4 even without a content type or file extension", async () => {
+    const res: any = await getLinkPreview(
+      "https://stroage.googleapis.com/test-stubs/sample_mp4_without_extension",
+    );
+
+    expect(res.mediaType).toEqual(`video`);
+    expect(res.contentType).toEqual(`video/mp4`);
+  });
 });
 
 describe(`#getPreviewFromContent`, () => {
   it(`Basic parsing`, async () => {
-    const linkInfo: any = await getPreviewFromContent(prefetchedResponse);
+    const linkInfo: any = await getPreviewFromContent({
+      ...prefetchedResponse,
+      response: new Response(prefetchedResponse.data, {
+        headers: prefetchedResponse.headers,
+      }),
+    });
 
     expect(linkInfo.url).toEqual(`https://www.youtube.com/watch?v=wuClZjOdT30`);
     expect(linkInfo.siteName).toEqual(`YouTube`);

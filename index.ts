@@ -2,6 +2,7 @@ import cheerio from "cheerio";
 import { fetch } from "cross-fetch";
 import AbortController from "abort-controller";
 import { CONSTANTS } from "./constants";
+import { fileTypeFromBuffer } from "file-type";
 
 interface ILinkPreviewOptions {
   headers?: Record<string, string>;
@@ -14,13 +15,11 @@ interface ILinkPreviewOptions {
 }
 
 interface IPreFetchedResource {
-  headers?: Record<string, string>;
   status?: number;
   imagesPropertyType?: string;
   proxyUrl?: string;
   url: string;
-  data?: string;
-  response?: Response;
+  response: Response;
 }
 
 /**
@@ -368,39 +367,6 @@ function parseTextResponse(
   };
 }
 
-// TODO: can use file-type package to determine mime type based on magic numbers
-/**
- *
- * @param body
- * @param url
- * @param options
- * @param contentType
- */
-function parseUnknownResponse(
-  body: string,
-  url: string,
-  options: ILinkPreviewOptions = {},
-  contentType?: string,
-) {
-  return parseTextResponse(body, url, options, contentType);
-}
-
-/**
- *
- * @param response
- */
-async function getData(response: IPreFetchedResource) {
-  if (response.data) {
-    return response.data;
-  }
-
-  if (response.response) {
-    return await response.response.text();
-  }
-
-  throw new Error(`link-preview-js could not fetch link information`);
-}
-
 /**
  *
  * @param response
@@ -412,20 +378,19 @@ async function parseResponse(
 ) {
   try {
     // console.log("[link-preview-js] response", response);
-    let contentType = response.response
-      ? response.response.headers.get(`content-type`)
-      : response.headers
-        ? response.headers[`content-type`]
-        : null;
+    let contentType = response.response.headers.get(`content-type`);
     let contentTypeTokens: string[] = [];
     let charset = null;
 
     if (!contentType) {
-      return parseUnknownResponse(
-        await getData(response),
-        response.url,
-        options,
-      );
+      const arrayBuffer = await response.response.arrayBuffer();
+      const fileType = await fileTypeFromBuffer(arrayBuffer);
+      if (!fileType) {
+        const text = new TextDecoder().decode(arrayBuffer);
+        return parseTextResponse(text, response.url, options);
+      } else {
+        contentType = fileType.mime;
+      }
     }
 
     if (contentType.includes(`;`)) {
@@ -455,7 +420,7 @@ async function parseResponse(
     if (CONSTANTS.REGEX_CONTENT_TYPE_TEXT.test(contentType)) {
       return {
         ...parseTextResponse(
-          await getData(response),
+          await response.response.text(),
           response.url,
           options,
           contentType,
@@ -472,7 +437,11 @@ async function parseResponse(
     }
 
     return {
-      ...parseUnknownResponse(await getData(response), response.url, options),
+      ...(await parseTextResponse(
+        await response.response.text(),
+        response.url,
+        options,
+      )),
       charset,
     };
   } catch (e) {
