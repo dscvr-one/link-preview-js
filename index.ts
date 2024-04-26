@@ -502,7 +502,16 @@ export async function getLinkPreview(
   const detectedUrl = text
     .replace(/\n/g, ` `)
     .split(` `)
-    .find((token) => CONSTANTS.REGEX_VALID_URL.test(token));
+    .find((token) => {
+      try {
+        const url = new URL(token);
+        return (
+          url.protocol.startsWith(`http`) || url.protocol.startsWith(`https`)
+        );
+      } catch (e) {
+        return false;
+      }
+    });
 
   if (!detectedUrl) {
     throw new Error(`link-preview-js did not receive a valid a url or text`);
