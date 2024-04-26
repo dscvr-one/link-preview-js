@@ -382,7 +382,7 @@ async function parseResponse(
     let contentTypeTokens: string[] = [];
     let charset = null;
 
-    if (!contentType) {
+    if (!contentType || contentType === "application/octet-stream") {
       const arrayBuffer = await response.response.arrayBuffer();
       const fileType = await fileTypeFromBuffer(arrayBuffer);
       if (!fileType) {
