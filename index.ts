@@ -14,29 +14,50 @@ interface ILinkPreviewOptions {
 }
 
 interface IPreFetchedResource {
-  headers: Record<string, string>;
+  headers?: Record<string, string>;
   status?: number;
   imagesPropertyType?: string;
   proxyUrl?: string;
   url: string;
-  data: string;
+  data?: string;
+  response?: Response;
 }
 
+/**
+ *
+ * @param address
+ */
 function throwOnLoopback(address: string) {
   if (CONSTANTS.REGEX_LOOPBACK.test(address)) {
     throw new Error("SSRF request detected, trying to query host");
   }
 }
 
+/**
+ *
+ * @param doc
+ * @param type
+ * @param attr
+ */
 function metaTag(doc: cheerio.Root, type: string, attr: string) {
   const nodes = doc(`meta[${attr}='${type}']`);
   return nodes.length ? nodes : null;
 }
 
+/**
+ *
+ * @param doc
+ * @param type
+ * @param attr
+ */
 function metaTagContent(doc: cheerio.Root, type: string, attr: string) {
   return doc(`meta[${attr}='${type}']`).attr(`content`);
 }
 
+/**
+ *
+ * @param doc
+ */
 function getTitle(doc: cheerio.Root) {
   let title =
     metaTagContent(doc, `og:title`, `property`) ||
@@ -47,6 +68,10 @@ function getTitle(doc: cheerio.Root) {
   return title;
 }
 
+/**
+ *
+ * @param doc
+ */
 function getSiteName(doc: cheerio.Root) {
   const siteName =
     metaTagContent(doc, `og:site_name`, `property`) ||
@@ -54,6 +79,10 @@ function getSiteName(doc: cheerio.Root) {
   return siteName;
 }
 
+/**
+ *
+ * @param doc
+ */
 function getDescription(doc: cheerio.Root) {
   const description =
     metaTagContent(doc, `description`, `name`) ||
@@ -62,6 +91,10 @@ function getDescription(doc: cheerio.Root) {
   return description;
 }
 
+/**
+ *
+ * @param doc
+ */
 function getMediaType(doc: cheerio.Root) {
   const node = metaTag(doc, `medium`, `name`);
   if (node) {
@@ -74,10 +107,16 @@ function getMediaType(doc: cheerio.Root) {
   );
 }
 
+/**
+ *
+ * @param doc
+ * @param rootUrl
+ * @param imagesPropertyType
+ */
 function getImages(
   doc: cheerio.Root,
   rootUrl: string,
-  imagesPropertyType?: string
+  imagesPropertyType?: string,
 ) {
   let images: string[] = [];
   let nodes: cheerio.Cheerio | null;
@@ -128,6 +167,10 @@ function getImages(
   return images;
 }
 
+/**
+ *
+ * @param doc
+ */
 function getVideos(doc: cheerio.Root) {
   const videos = [];
   let nodeTypes;
@@ -192,11 +235,20 @@ function getVideos(doc: cheerio.Root) {
 }
 
 // returns default favicon (//hostname/favicon.ico) for a url
+/**
+ *
+ * @param rootUrl
+ */
 function getDefaultFavicon(rootUrl: string) {
   return new URL(`/favicon.ico`, rootUrl);
 }
 
 // returns an array of URLs to favicon images
+/**
+ *
+ * @param doc
+ * @param rootUrl
+ */
 function getFavicons(doc: cheerio.Root, rootUrl: string) {
   const images = [];
   let nodes: cheerio.Cheerio | never[] = [];
@@ -232,6 +284,11 @@ function getFavicons(doc: cheerio.Root, rootUrl: string) {
   return images;
 }
 
+/**
+ *
+ * @param url
+ * @param contentType
+ */
 function parseImageResponse(url: string, contentType: string) {
   return {
     url,
@@ -241,6 +298,11 @@ function parseImageResponse(url: string, contentType: string) {
   };
 }
 
+/**
+ *
+ * @param url
+ * @param contentType
+ */
 function parseAudioResponse(url: string, contentType: string) {
   return {
     url,
@@ -250,6 +312,11 @@ function parseAudioResponse(url: string, contentType: string) {
   };
 }
 
+/**
+ *
+ * @param url
+ * @param contentType
+ */
 function parseVideoResponse(url: string, contentType: string) {
   return {
     url,
@@ -259,6 +326,11 @@ function parseVideoResponse(url: string, contentType: string) {
   };
 }
 
+/**
+ *
+ * @param url
+ * @param contentType
+ */
 function parseApplicationResponse(url: string, contentType: string) {
   return {
     url,
@@ -268,11 +340,18 @@ function parseApplicationResponse(url: string, contentType: string) {
   };
 }
 
+/**
+ *
+ * @param body
+ * @param url
+ * @param options
+ * @param contentType
+ */
 function parseTextResponse(
   body: string,
   url: string,
   options: ILinkPreviewOptions = {},
-  contentType?: string
+  contentType?: string,
 ) {
   const doc = cheerio.load(body);
 
@@ -289,34 +368,71 @@ function parseTextResponse(
   };
 }
 
+// TODO: can use file-type package to determine mime type based on magic numbers
+/**
+ *
+ * @param body
+ * @param url
+ * @param options
+ * @param contentType
+ */
 function parseUnknownResponse(
   body: string,
   url: string,
   options: ILinkPreviewOptions = {},
-  contentType?: string
+  contentType?: string,
 ) {
   return parseTextResponse(body, url, options, contentType);
 }
 
-function parseResponse(
+/**
+ *
+ * @param response
+ */
+async function getData(response: IPreFetchedResource) {
+  if (response.data) {
+    return response.data;
+  }
+
+  if (response.response) {
+    return await response.response.text();
+  }
+
+  throw new Error(`link-preview-js could not fetch link information`);
+}
+
+/**
+ *
+ * @param response
+ * @param options
+ */
+async function parseResponse(
   response: IPreFetchedResource,
-  options?: ILinkPreviewOptions
+  options?: ILinkPreviewOptions,
 ) {
   try {
     // console.log("[link-preview-js] response", response);
-    let contentType = response.headers[`content-type`];
+    let contentType = response.response
+      ? response.response.headers.get(`content-type`)
+      : response.headers
+        ? response.headers[`content-type`]
+        : null;
     let contentTypeTokens: string[] = [];
     let charset = null;
 
     if (!contentType) {
-      return parseUnknownResponse(response.data, response.url, options);
+      return parseUnknownResponse(
+        await getData(response),
+        response.url,
+        options,
+      );
     }
 
     if (contentType.includes(`;`)) {
       contentTypeTokens = contentType.split(`;`);
       contentType = contentTypeTokens[0];
 
-      for (let token of contentTypeTokens) {
+      for (const token of contentTypeTokens) {
         if (token.indexOf("charset=") !== -1) {
           charset = token.split("=")[1];
         }
@@ -337,9 +453,13 @@ function parseResponse(
     }
 
     if (CONSTANTS.REGEX_CONTENT_TYPE_TEXT.test(contentType)) {
-      const htmlString = response.data;
       return {
-        ...parseTextResponse(htmlString, response.url, options, contentType),
+        ...parseTextResponse(
+          await getData(response),
+          response.url,
+          options,
+          contentType,
+        ),
         charset,
       };
     }
@@ -351,17 +471,15 @@ function parseResponse(
       };
     }
 
-    const htmlString = response.data;
-
     return {
-      ...parseUnknownResponse(htmlString, response.url, options),
+      ...parseUnknownResponse(await getData(response), response.url, options),
       charset,
     };
   } catch (e) {
     throw new Error(
       `link-preview-js could not fetch link information ${(
         e as any
-      ).toString()}`
+      ).toString()}`,
     );
   }
 }
@@ -375,7 +493,7 @@ function parseResponse(
  */
 export async function getLinkPreview(
   text: string,
-  options?: ILinkPreviewOptions
+  options?: ILinkPreviewOptions,
 ) {
   if (!text || typeof text !== `string`) {
     throw new Error(`link-preview-js did not receive a valid url or text`);
@@ -392,7 +510,7 @@ export async function getLinkPreview(
 
   if (options?.followRedirects === `manual` && !options?.handleRedirects) {
     throw new Error(
-      `link-preview-js followRedirects is set to manual, but no handleRedirects function was provided`
+      `link-preview-js followRedirects is set to manual, but no handleRedirects function was provided`,
     );
   }
 
@@ -450,20 +568,14 @@ export async function getLinkPreview(
 
   clearTimeout(timeoutCounter);
 
-  const headers: Record<string, string> = {};
-  response.headers.forEach((header, key) => {
-    headers[key] = header;
-  });
-
   const normalizedResponse: IPreFetchedResource = {
     url: options?.proxyUrl
       ? response.url.replace(options.proxyUrl, ``)
       : response.url,
-    headers,
-    data: await response.text(),
+    response,
   };
 
-  return parseResponse(normalizedResponse, options);
+  return await parseResponse(normalizedResponse, options);
 }
 
 /**
@@ -475,7 +587,7 @@ export async function getLinkPreview(
  */
 export async function getPreviewFromContent(
   response: IPreFetchedResource,
-  options?: ILinkPreviewOptions
+  options?: ILinkPreviewOptions,
 ) {
   if (!response || typeof response !== `object`) {
     throw new Error(`link-preview-js did not receive a valid response object`);

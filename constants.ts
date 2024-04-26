@@ -34,7 +34,7 @@ export const CONSTANTS = {
       // resource path
       "(?:[/?#]\\S*)?" +
       "$",
-    "i"
+    "i",
   ),
 
   REGEX_LOOPBACK: new RegExp(
@@ -45,7 +45,7 @@ export const CONSTANTS = {
       "|" +
       "(?:172\\.(?:1[6-9]|2\\d|3[0-1])(?:\\.\\d{1,3}){2})" +
       "$",
-    "i"
+    "i",
   ),
 
   REGEX_CONTENT_TYPE_IMAGE: new RegExp("image/.*", "i"),
