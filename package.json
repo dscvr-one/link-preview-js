@@ -13,8 +13,8 @@
   },
   "types": "build/index.d.ts",
   "scripts": {
-    "test": "jest",
-    "test:ci": "jest --testLocationInResults --ci --outputFile=test_results.json --json",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:ci": "node --experimental-vm-modules node_modules/jest/bin/jest.js --ci --outputFile=test_results.json --json",
     "build": "tsc",
     "bump": "./bump-version.sh",
     "prepublishOnly": "tsc",

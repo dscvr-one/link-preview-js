@@ -3,7 +3,7 @@ import prefetchedResponse from "./sampleResponse.json";
 
 describe(`#getLinkPreview()`, () => {
   it(`should extract link info from just URL`, async () => {
-    const linkInfo: any = await getLinkPreview(
+    const linkInfo = await getLinkPreview(
       `https://www.youtube.com/watch?v=wuClZjOdT30`,
       { headers: { "Accept-Language": `en-US` } },
     );
@@ -13,13 +13,13 @@ describe(`#getLinkPreview()`, () => {
     expect(linkInfo.title).toEqual(`Geography Now! Germany`);
     expect(linkInfo.description).toBeTruthy();
     expect(linkInfo.mediaType).toEqual(`video.other`);
-    expect(linkInfo.images.length).toEqual(1);
-    expect(linkInfo.images[0]).toEqual(
+    expect(linkInfo.images!.length).toEqual(1);
+    expect(linkInfo.images![0]).toEqual(
       `https://i.ytimg.com/vi/wuClZjOdT30/maxresdefault.jpg`,
     );
-    expect(linkInfo.videos.length).toEqual(0);
-    expect(linkInfo.favicons[0]).not.toBe(``);
-    expect(linkInfo.contentType.toLowerCase()).toEqual(`text/html`);
+    expect(linkInfo.videos!.length).toEqual(0);
+    expect(linkInfo.favicons![0]).not.toBe(``);
+    expect(linkInfo.contentType!.toLowerCase()).toEqual(`text/html`);
     expect(linkInfo.charset?.toLowerCase()).toEqual(`utf-8`);
   });
 
@@ -82,7 +82,7 @@ describe(`#getLinkPreview()`, () => {
     );
     expect(linkInfo.mediaType).toEqual(`audio`);
     expect(linkInfo.contentType?.toLowerCase()).toEqual(`audio/mpeg`);
-    expect(linkInfo.favicons[0]).toBeTruthy();
+    expect(linkInfo.favicons![0]).toBeTruthy();
   });
 
   it(`should handle video urls`, async () => {
@@ -93,7 +93,7 @@ describe(`#getLinkPreview()`, () => {
     expect(linkInfo.url).toEqual(`https://www.w3schools.com/html/mov_bbb.mp4`);
     expect(linkInfo.mediaType).toEqual(`video`);
     expect(linkInfo.contentType?.toLowerCase()).toEqual(`video/mp4`);
-    expect(linkInfo.favicons[0]).toBeTruthy();
+    expect(linkInfo.favicons![0]).toBeTruthy();
   });
 
   it(`should handle image urls`, async () => {
@@ -106,7 +106,7 @@ describe(`#getLinkPreview()`, () => {
     );
     expect(linkInfo.mediaType).toEqual(`image`);
     expect(linkInfo.contentType?.toLowerCase()).toEqual(`image/jpeg`);
-    expect(linkInfo.favicons[0]).toBeTruthy();
+    expect(linkInfo.favicons![0]).toBeTruthy();
   });
 
   it(`should handle unknown content type urls`, async () => {
@@ -127,7 +127,7 @@ describe(`#getLinkPreview()`, () => {
     );
     expect(linkInfo.mediaType).toEqual(`application`);
     expect(linkInfo.contentType?.toLowerCase()).toEqual(`application/pdf`);
-    expect(linkInfo.favicons[0]).toBeTruthy();
+    expect(linkInfo.favicons![0]).toBeTruthy();
   });
 
   it(`no link in text should fail gracefully`, async () => {
@@ -235,7 +235,7 @@ describe(`#getLinkPreview()`, () => {
   });
 
   it("should handle video tags without type or secure_url tags", async () => {
-    const res: any = await getLinkPreview(
+    const res = await getLinkPreview(
       `https://newpathtitle.com/falling-markets-how-to-stop-buyer-from-getting-out/`,
       { followRedirects: `follow` },
     );
@@ -246,22 +246,30 @@ describe(`#getLinkPreview()`, () => {
     );
     expect(res.description).toBeTruthy();
     expect(res.mediaType).toEqual(`article`);
-    expect(res.images.length).toBeGreaterThan(0);
-    expect(res.videos.length).toBeGreaterThan(0);
-    expect(res.videos[0].url).toEqual(
+    expect(res.images!.length).toBeGreaterThan(0);
+    expect(res.videos!.length).toBeGreaterThan(0);
+    expect(res.videos![0].url).toEqual(
       `https://www.youtube.com/embed/nqNXjxpAPkU`,
     );
-    expect(res.favicons.length).toBeGreaterThan(0);
-    expect(res.contentType.toLowerCase()).toEqual(`text/html`);
+    expect(res.favicons!.length).toBeGreaterThan(0);
+    expect(res.contentType!.toLowerCase()).toEqual(`text/html`);
   });
 
   it("should auto detect mp4 even without a content type or file extension", async () => {
-    const res: any = await getLinkPreview(
-      "https://stroage.googleapis.com/test-stubs/sample_mp4_without_extension",
+    const res = await getLinkPreview(
+      "https://storage.googleapis.com/test-stubs/sample_mp4_without_extension",
     );
 
     expect(res.mediaType).toEqual(`video`);
     expect(res.contentType).toEqual(`video/mp4`);
+  });
+
+  it("should throw exception if URL is not valid", async () => {
+    await expect(
+      getLinkPreview(
+        "https://storagenotvalid.googleapis.com/test-stubs/sample_mp4_without_extension",
+      ),
+    ).rejects.toThrowErrorMatchingSnapshot();
   });
 });
 

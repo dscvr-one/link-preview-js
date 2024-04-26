@@ -2,7 +2,11 @@ import cheerio from "cheerio";
 import { fetch } from "cross-fetch";
 import AbortController from "abort-controller";
 import { CONSTANTS } from "./constants";
-import { fileTypeFromBuffer } from "file-type";
+import {
+  fileTypeFromBuffer,
+  fileTypeFromStream,
+  fileTypeStream,
+} from "file-type";
 
 interface ILinkPreviewOptions {
   headers?: Record<string, string>;
@@ -21,6 +25,25 @@ interface IPreFetchedResource {
   url: string;
   response: Response;
 }
+
+export type LinkPreview = {
+  url: string;
+  title?: string;
+  siteName?: string | undefined;
+  description?: string | undefined;
+  mediaType: string;
+  contentType: string | undefined;
+  images?: string[];
+  videos?: {
+    url: string | undefined;
+    secureUrl: string | null | undefined;
+    type: string | null | undefined;
+    width: string | undefined;
+    height: string | undefined;
+  }[];
+  favicons?: URL[];
+  charset?: string;
+};
 
 /**
  *
@@ -351,7 +374,7 @@ function parseTextResponse(
   url: string,
   options: ILinkPreviewOptions = {},
   contentType?: string,
-) {
+): LinkPreview {
   const doc = cheerio.load(body);
 
   return {
@@ -375,12 +398,19 @@ function parseTextResponse(
 async function parseResponse(
   response: IPreFetchedResource,
   options?: ILinkPreviewOptions,
-) {
+): Promise<LinkPreview> {
+  const status = response.response.status;
+  if (status < 200 || status >= 300) {
+    throw new Error(
+      `link-preview-js unexpected status in response ${status} ${response.response.statusText}`,
+    );
+  }
+
   try {
     // console.log("[link-preview-js] response", response);
     let contentType = response.response.headers.get(`content-type`);
     let contentTypeTokens: string[] = [];
-    let charset = null;
+    let charset;
 
     if (!contentType || contentType === "application/octet-stream") {
       const arrayBuffer = await response.response.arrayBuffer();
@@ -463,7 +493,7 @@ async function parseResponse(
 export async function getLinkPreview(
   text: string,
   options?: ILinkPreviewOptions,
-) {
+): Promise<LinkPreview> {
   if (!text || typeof text !== `string`) {
     throw new Error(`link-preview-js did not receive a valid url or text`);
   }
