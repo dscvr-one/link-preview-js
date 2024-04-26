@@ -17,7 +17,8 @@
     "test:ci": "jest --testLocationInResults --ci --outputFile=test_results.json --json",
     "build": "tsc",
     "bump": "./bump-version.sh",
-    "prepublishOnly": "tsc"
+    "prepublishOnly": "tsc",
+    "prepare": "npm run build"
   },
   "keywords": [
     "javascript",
