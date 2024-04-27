@@ -2,11 +2,7 @@ import cheerio from "cheerio";
 import { fetch } from "cross-fetch";
 import AbortController from "abort-controller";
 import { CONSTANTS } from "./constants";
-import {
-  fileTypeFromBuffer,
-  fileTypeFromStream,
-  fileTypeStream,
-} from "file-type";
+import { fileTypeFromBuffer } from "file-type";
 
 interface ILinkPreviewOptions {
   headers?: Record<string, string>;
@@ -440,7 +436,10 @@ async function parseResponse(
     let contentTypeTokens: string[] = [];
     let charset;
 
-    if (!contentType || ["application/octet-stream", "video", "audio"].includes(contentType)) {
+    if (
+      !contentType ||
+      ["application/octet-stream", "video", "audio"].includes(contentType)
+    ) {
       const buffer = await readBytesForFileType(response.response);
       const fileType = await fileTypeFromBuffer(buffer);
       if (!fileType) {
