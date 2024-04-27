@@ -398,6 +398,8 @@ const readBytesForFileType = async (response: Response) => {
     return await response.arrayBuffer();
   }
 
+  console.log("HERE???");
+
   const reader = response.body.getReader();
 
   // append the first 4100 bytes to the buffer from the response
@@ -408,12 +410,18 @@ const readBytesForFileType = async (response: Response) => {
     if (chunk.value.length + offset > SAMPLE_SIZE) {
       const subChunk = chunk.value.subarray(0, SAMPLE_SIZE - offset);
       buffer.set(subChunk, offset);
-      offset += subChunk.length;
+      offset = SAMPLE_SIZE;
+      break;
     } else {
       buffer.set(chunk.value, offset);
       offset += chunk.value.length;
     }
   }
+
+
+  console.log("RETURNING....???");
+
+
   return buffer.subarray(0, offset);
 };
 
