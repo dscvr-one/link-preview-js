@@ -446,7 +446,9 @@ async function parseResponse(
     let contentTypeTokens: string[] = [];
     let charset;
 
-    if (!contentType || contentType === "application/octet-stream") {
+    console.log("HERE?????");
+
+    if (!contentType || ["application/octet-stream", "video", "audio"].includes(contentType)) {
       const buffer = await readBytesForFileType(response.response);
       const fileType = await fileTypeFromBuffer(buffer);
       if (!fileType) {
