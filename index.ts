@@ -2,11 +2,7 @@ import cheerio from "cheerio";
 import { fetch } from "cross-fetch";
 import AbortController from "abort-controller";
 import { CONSTANTS } from "./constants";
-import {
-  fileTypeFromBuffer,
-  fileTypeFromStream,
-  fileTypeStream,
-} from "file-type";
+import { fileTypeFromBuffer } from "file-type";
 
 interface ILinkPreviewOptions {
   headers?: Record<string, string>;
@@ -390,17 +386,20 @@ function parseTextResponse(
   };
 }
 
+/// Read SAMPLE_SIZE bytes for file type as an ArrayBuffer
 const readBytesForFileType = async (response: Response) => {
   // We get this from the file-type package as the sample size
   const SAMPLE_SIZE = 4100;
 
+  // If the body doesn't have a reader then we use get the array buffer directly from the response
   if (!response.body || !response.body.getReader) {
     return await response.arrayBuffer();
   }
 
   const reader = response.body.getReader();
 
-  // append the first 4100 bytes to the buffer from the response
+  // we use the streaming API to aggregate the first append the first SAMPLE_SIZE bytes
+  // from the response
   const buffer = new Uint8Array(SAMPLE_SIZE);
   let offset = 0;
   let chunk;
@@ -428,10 +427,9 @@ async function parseResponse(
   response: IPreFetchedResource,
   options?: ILinkPreviewOptions,
 ): Promise<LinkPreview> {
-  const status = response.response.status;
-  if (status < 200 || status >= 300) {
+  if (!response.response.ok) {
     throw new Error(
-      `link-preview-js unexpected status in response ${status} ${response.response.statusText}`,
+      `link-preview-js unexpected status in response ${response.response.status} ${response.response.statusText}`,
     );
   }
 
@@ -440,7 +438,12 @@ async function parseResponse(
     let contentTypeTokens: string[] = [];
     let charset;
 
-    if (!contentType || ["application/octet-stream", "video", "audio"].includes(contentType)) {
+    // If the content type is sufficiently vague, then use the file type package to
+    // determine the content type via magic numbers.
+    if (
+      !contentType ||
+      ["application/octet-stream", "video", "audio"].includes(contentType)
+    ) {
       const buffer = await readBytesForFileType(response.response);
       const fileType = await fileTypeFromBuffer(buffer);
       if (!fileType) {
