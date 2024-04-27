@@ -390,6 +390,33 @@ function parseTextResponse(
   };
 }
 
+const readBytesForFileType = async (response: Response) => {
+  // We get this from the file-type package as the sample size
+  const SAMPLE_SIZE = 4100;
+
+  if (!response.body || !response.body.getReader) {
+    return await response.arrayBuffer();
+  }
+
+  const reader = response.body.getReader();
+
+  // append the first 4100 bytes to the buffer from the response
+  const buffer = new Uint8Array(SAMPLE_SIZE);
+  let offset = 0;
+  let chunk;
+  while (!(chunk = await reader.read()).done) {
+    if (chunk.value.length + offset > SAMPLE_SIZE) {
+      const subChunk = chunk.value.subarray(0, SAMPLE_SIZE - offset);
+      buffer.set(subChunk, offset);
+      offset += subChunk.length;
+    } else {
+      buffer.set(chunk.value, offset);
+      offset += chunk.value.length;
+    }
+  }
+  return buffer.subarray(0, offset);
+};
+
 /**
  *
  * @param response
@@ -407,16 +434,15 @@ async function parseResponse(
   }
 
   try {
-    // console.log("[link-preview-js] response", response);
     let contentType = response.response.headers.get(`content-type`);
     let contentTypeTokens: string[] = [];
     let charset;
 
     if (!contentType || contentType === "application/octet-stream") {
-      const arrayBuffer = await response.response.arrayBuffer();
-      const fileType = await fileTypeFromBuffer(arrayBuffer);
+      const buffer = await readBytesForFileType(response.response);
+      const fileType = await fileTypeFromBuffer(buffer);
       if (!fileType) {
-        const text = new TextDecoder().decode(arrayBuffer);
+        const text = new TextDecoder().decode(buffer);
         return parseTextResponse(text, response.url, options);
       } else {
         contentType = fileType.mime;
