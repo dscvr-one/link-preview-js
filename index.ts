@@ -398,8 +398,6 @@ const readBytesForFileType = async (response: Response) => {
     return await response.arrayBuffer();
   }
 
-  console.log("HERE???");
-
   const reader = response.body.getReader();
 
   // append the first 4100 bytes to the buffer from the response
@@ -417,10 +415,6 @@ const readBytesForFileType = async (response: Response) => {
       offset += chunk.value.length;
     }
   }
-
-
-  console.log("RETURNING....???");
-
 
   return buffer.subarray(0, offset);
 };
@@ -445,8 +439,6 @@ async function parseResponse(
     let contentType = response.response.headers.get(`content-type`);
     let contentTypeTokens: string[] = [];
     let charset;
-
-    console.log("HERE?????");
 
     if (!contentType || ["application/octet-stream", "video", "audio"].includes(contentType)) {
       const buffer = await readBytesForFileType(response.response);
