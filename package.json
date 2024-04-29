@@ -27,7 +27,10 @@
     "lint:eslint": "eslint \"{,!(node_modules|dist)/**/}*.{js,cjs,mjs,ts}\" --ignore-path .gitignore",
     "lint:eslint:fix": "eslint --fix \"{,!(node_modules|dist)/**/}*.{js,cjs,mjs,ts}\" --ignore-path .gitignore",
     "lint:prettier": "prettier --check \"{,!(node_modules|dist)/**/}*.{js,cjs,mjs,ts}\" --ignore-path .gitignore",
-    "lint:prettier:fix": "prettier --write \"{,!(node_modules|dist)/**/}*.{js,cjs,mjs,ts}\" --ignore-path .gitignore"
+    "lint:prettier:fix": "prettier --write \"{,!(node_modules|dist)/**/}*.{js,cjs,mjs,ts}\" --ignore-path .gitignore",
+    "release": "shipjs prepare",
+    "release:dry": "shipjs prepare --dry-run",
+    "release:auto": "shipjs prepare --yes"
   },
   "dependencies": {
     "abort-controller": "^3.0.0",
