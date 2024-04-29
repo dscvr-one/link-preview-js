@@ -2,6 +2,7 @@ import cheerio from "cheerio";
 import { fetch } from "cross-fetch";
 import AbortController from "abort-controller";
 import { CONSTANTS } from "./constants";
+import { fileTypeFromBuffer } from "file-type";
 
 interface ILinkPreviewOptions {
   headers?: Record<string, string>;
@@ -14,14 +15,31 @@ interface ILinkPreviewOptions {
 }
 
 interface IPreFetchedResource {
-  headers?: Record<string, string>;
   status?: number;
   imagesPropertyType?: string;
   proxyUrl?: string;
   url: string;
-  data?: string;
-  response?: Response;
+  response: Response;
 }
+
+export type LinkPreview = {
+  url: string;
+  title?: string;
+  siteName?: string | undefined;
+  description?: string | undefined;
+  mediaType: string;
+  contentType: string | undefined;
+  images?: string[];
+  videos?: {
+    url: string | undefined;
+    secureUrl: string | null | undefined;
+    type: string | null | undefined;
+    width: string | undefined;
+    height: string | undefined;
+  }[];
+  favicons?: URL[];
+  charset?: string;
+};
 
 /**
  *
@@ -352,7 +370,7 @@ function parseTextResponse(
   url: string,
   options: ILinkPreviewOptions = {},
   contentType?: string,
-) {
+): LinkPreview {
   const doc = cheerio.load(body);
 
   return {
@@ -368,38 +386,37 @@ function parseTextResponse(
   };
 }
 
-// TODO: can use file-type package to determine mime type based on magic numbers
-/**
- *
- * @param body
- * @param url
- * @param options
- * @param contentType
- */
-function parseUnknownResponse(
-  body: string,
-  url: string,
-  options: ILinkPreviewOptions = {},
-  contentType?: string,
-) {
-  return parseTextResponse(body, url, options, contentType);
-}
+/// Read SAMPLE_SIZE bytes for file type as an ArrayBuffer
+const readBytesForFileType = async (response: Response) => {
+  // We get this from the file-type package as the sample size
+  const SAMPLE_SIZE = 4100;
 
-/**
- *
- * @param response
- */
-async function getData(response: IPreFetchedResource) {
-  if (response.data) {
-    return response.data;
+  // If the body doesn't have a reader then we use get the array buffer directly from the response
+  if (!response.body || !response.body.getReader) {
+    return await response.arrayBuffer();
   }
 
-  if (response.response) {
-    return await response.response.text();
+  const reader = response.body.getReader();
+
+  // we use the streaming API to aggregate the first append the first SAMPLE_SIZE bytes
+  // from the response
+  const buffer = new Uint8Array(SAMPLE_SIZE);
+  let offset = 0;
+  let chunk;
+  while (!(chunk = await reader.read()).done) {
+    if (chunk.value.length + offset > SAMPLE_SIZE) {
+      const subChunk = chunk.value.subarray(0, SAMPLE_SIZE - offset);
+      buffer.set(subChunk, offset);
+      offset = SAMPLE_SIZE;
+      break;
+    } else {
+      buffer.set(chunk.value, offset);
+      offset += chunk.value.length;
+    }
   }
 
-  throw new Error(`link-preview-js could not fetch link information`);
-}
+  return buffer.subarray(0, offset);
+};
 
 /**
  *
@@ -409,23 +426,32 @@ async function getData(response: IPreFetchedResource) {
 async function parseResponse(
   response: IPreFetchedResource,
   options?: ILinkPreviewOptions,
-) {
-  try {
-    // console.log("[link-preview-js] response", response);
-    let contentType = response.response
-      ? response.response.headers.get(`content-type`)
-      : response.headers
-        ? response.headers[`content-type`]
-        : null;
-    let contentTypeTokens: string[] = [];
-    let charset = null;
+): Promise<LinkPreview> {
+  if (!response.response.ok) {
+    throw new Error(
+      `link-preview-js unexpected status in response ${response.response.status} ${response.response.statusText}`,
+    );
+  }
 
-    if (!contentType) {
-      return parseUnknownResponse(
-        await getData(response),
-        response.url,
-        options,
-      );
+  try {
+    let contentType = response.response.headers.get(`content-type`);
+    let contentTypeTokens: string[] = [];
+    let charset;
+
+    // If the content type is sufficiently vague, then use the file type package to
+    // determine the content type via magic numbers.
+    if (
+      !contentType ||
+      ["application/octet-stream", "video", "audio"].includes(contentType)
+    ) {
+      const buffer = await readBytesForFileType(response.response);
+      const fileType = await fileTypeFromBuffer(buffer);
+      if (!fileType) {
+        const text = new TextDecoder().decode(buffer);
+        return parseTextResponse(text, response.url, options);
+      } else {
+        contentType = fileType.mime;
+      }
     }
 
     if (contentType.includes(`;`)) {
@@ -455,7 +481,7 @@ async function parseResponse(
     if (CONSTANTS.REGEX_CONTENT_TYPE_TEXT.test(contentType)) {
       return {
         ...parseTextResponse(
-          await getData(response),
+          await response.response.text(),
           response.url,
           options,
           contentType,
@@ -472,7 +498,11 @@ async function parseResponse(
     }
 
     return {
-      ...parseUnknownResponse(await getData(response), response.url, options),
+      ...(await parseTextResponse(
+        await response.response.text(),
+        response.url,
+        options,
+      )),
       charset,
     };
   } catch (e) {
@@ -494,7 +524,7 @@ async function parseResponse(
 export async function getLinkPreview(
   text: string,
   options?: ILinkPreviewOptions,
-) {
+): Promise<LinkPreview> {
   if (!text || typeof text !== `string`) {
     throw new Error(`link-preview-js did not receive a valid url or text`);
   }

@@ -1,11 +1,15 @@
 import type { Config } from "jest";
 
 const config: Config = {
-  preset: `ts-jest`,
-  testEnvironment: `node`,
+  modulePathIgnorePatterns: ["<rootDir>/build/"],
   extensionsToTreatAsEsm: [".ts"],
-  globals: { "ts-jest": { diagnostics: false } },
-  modulePathIgnorePatterns: ["<rootDir>/build/", "<rootDir>/node_modules/"],
+  preset: "ts-jest",
+  testEnvironment: "node",
+  globals: {
+    "ts-jest": {
+      useESM: true,
+    },
+  },
 };
 
 export default config;
