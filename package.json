@@ -17,7 +17,7 @@
     "test:ci": "jest --testLocationInResults --ci --outputFile=test_results.json --json",
     "build": "tsc",
     "prepublishOnly": "tsc",
-    "prepare": "npm run build",
+    "prepare": "is-ci || husky; npm run build",
     "lint": "npm run lint:eslint && npm run lint:prettier",
     "lintfix": "npm run lint:eslint:fix && npm run lint:prettier:fix",
     "lint:eslint": "eslint \"{,!(node_modules|dist)/**/}*.{js,cjs,mjs,ts}\" --ignore-path .gitignore",
