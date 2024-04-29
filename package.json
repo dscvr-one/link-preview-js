@@ -16,7 +16,6 @@
     "test": "jest",
     "test:ci": "jest --testLocationInResults --ci --outputFile=test_results.json --json",
     "build": "tsc",
-    "bump": "./bump-version.sh",
     "prepublishOnly": "tsc",
     "prepare": "npm run build",
     "lint": "npm run lint:eslint && npm run lint:prettier",
