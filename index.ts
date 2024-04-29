@@ -1,7 +1,7 @@
-import cheerio from "cheerio";
-import { fetch } from "cross-fetch";
-import AbortController from "abort-controller";
-import { CONSTANTS } from "./constants";
+import cheerio from 'cheerio';
+import { fetch } from 'cross-fetch';
+import AbortController from 'abort-controller';
+import { CONSTANTS } from './constants';
 
 interface ILinkPreviewOptions {
   headers?: Record<string, string>;
@@ -29,7 +29,7 @@ interface IPreFetchedResource {
  */
 function throwOnLoopback(address: string) {
   if (CONSTANTS.REGEX_LOOPBACK.test(address)) {
-    throw new Error("SSRF request detected, trying to query host");
+    throw new Error('SSRF request detected, trying to query host');
   }
 }
 
@@ -433,8 +433,8 @@ async function parseResponse(
       contentType = contentTypeTokens[0];
 
       for (const token of contentTypeTokens) {
-        if (token.indexOf("charset=") !== -1) {
-          charset = token.split("=")[1];
+        if (token.indexOf('charset=') !== -1) {
+          charset = token.split('=')[1];
         }
       }
     }

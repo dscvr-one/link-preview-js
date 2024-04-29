@@ -1,11 +1,11 @@
-import { getLinkPreview, getPreviewFromContent } from "../index";
-import prefetchedResponse from "./sampleResponse.json";
+import { getLinkPreview, getPreviewFromContent } from '../index';
+import prefetchedResponse from './sampleResponse.json';
 
 describe(`#getLinkPreview()`, () => {
   it(`should extract link info from just URL`, async () => {
     const linkInfo: any = await getLinkPreview(
       `https://www.youtube.com/watch?v=wuClZjOdT30`,
-      { headers: { "Accept-Language": `en-US` } },
+      { headers: { 'Accept-Language': `en-US` } },
     );
 
     expect(linkInfo.url).toEqual(`https://www.youtube.com/watch?v=wuClZjOdT30`);
@@ -23,7 +23,7 @@ describe(`#getLinkPreview()`, () => {
     expect(linkInfo.charset?.toLowerCase()).toEqual(`utf-8`);
   });
 
-  it("returns charset of website", async () => {
+  it('returns charset of website', async () => {
     const linkInfo: any = await getLinkPreview(`https://www.pravda.com.ua`);
 
     expect(linkInfo.url).toEqual(`https://www.pravda.com.ua/`);
@@ -36,7 +36,7 @@ describe(`#getLinkPreview()`, () => {
       `
       https://www.youtube.com/watch?v=wuClZjOdT30
     `,
-      { headers: { "Accept-Language": `en-US` } },
+      { headers: { 'Accept-Language': `en-US` } },
     );
 
     expect(linkInfo.url).toEqual(`https://www.youtube.com/watch?v=wuClZjOdT30`);
@@ -56,7 +56,7 @@ describe(`#getLinkPreview()`, () => {
   it(`should extract link info from just text with a URL`, async () => {
     const linkInfo: any = await getLinkPreview(
       `This is some text blah blah https://www.youtube.com/watch?v=wuClZjOdT30 and more text`,
-      { headers: { "Accept-Language": `en-US` } },
+      { headers: { 'Accept-Language': `en-US` } },
     );
 
     expect(linkInfo.url).toEqual(`https://www.youtube.com/watch?v=wuClZjOdT30`);
@@ -156,7 +156,7 @@ describe(`#getLinkPreview()`, () => {
         proxyUrl: `https://cors-anywhere.herokuapp.com/`,
         headers: {
           Origin: `http://localhost:8000`,
-          "Accept-Language": `en-US`,
+          'Accept-Language': `en-US`,
         },
       },
     );
@@ -175,17 +175,17 @@ describe(`#getLinkPreview()`, () => {
     expect(linkInfo.contentType.toLowerCase()).toEqual(`text/html`);
   });
 
-  it("should timeout (default 3s) with infinite loading link", async () => {
+  it('should timeout (default 3s) with infinite loading link', async () => {
     try {
       await getLinkPreview(
         `https://www.gamestop.com/video-games/pc-gaming/components/cooling/products/hyper-212-rgb-black-edition-fan/185243.html?gclid=Cj0KCQjwraqHBhDsARIsAKuGZeECDlqkF2cxpcuS0xRxQmrv5BxFawWS_B51kiqehPf64_KlO0oyunsaAhn5EALw_wcB&gclsrc=aw.ds`,
       );
     } catch (e: any) {
-      expect(e.message).toEqual("Request timeout");
+      expect(e.message).toEqual('Request timeout');
     }
   });
 
-  it("should timeout (custom 1s) with infinite loading link", async () => {
+  it('should timeout (custom 1s) with infinite loading link', async () => {
     try {
       await getLinkPreview(
         `https://www.gamestop.com/video-games/pc-gaming/components/cooling/products/hyper-212-rgb-black-edition-fan/185243.html?gclid=Cj0KCQjwraqHBhDsARIsAKuGZeECDlqkF2cxpcuS0xRxQmrv5BxFawWS_B51kiqehPf64_KlO0oyunsaAhn5EALw_wcB&gclsrc=aw.ds`,
@@ -194,7 +194,7 @@ describe(`#getLinkPreview()`, () => {
         },
       );
     } catch (e: any) {
-      expect(e.message).toEqual("Request timeout");
+      expect(e.message).toEqual('Request timeout');
     }
   });
 
@@ -234,7 +234,7 @@ describe(`#getLinkPreview()`, () => {
     expect(response.mediaType).toEqual(`website`);
   });
 
-  it("should handle video tags without type or secure_url tags", async () => {
+  it('should handle video tags without type or secure_url tags', async () => {
     const res: any = await getLinkPreview(
       `https://newpathtitle.com/falling-markets-how-to-stop-buyer-from-getting-out/`,
       { followRedirects: `follow` },
@@ -276,8 +276,8 @@ describe(`#getPreviewFromContent`, () => {
 });
 
 xdescribe(`simple test`, () => {
-  it("fetch my repo", async () => {
-    const linkInfo: any = await getLinkPreview("https://www.pravda.com.ua");
+  it('fetch my repo', async () => {
+    const linkInfo: any = await getLinkPreview('https://www.pravda.com.ua');
     console.warn({ linkInfo });
 
     expect(1).toEqual(2);
