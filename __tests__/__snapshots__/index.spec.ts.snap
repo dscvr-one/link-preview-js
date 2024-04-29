@@ -5,3 +5,5 @@ exports[`#getLinkPreview() > no link in text should fail gracefully 1`] = `[Erro
 exports[`#getLinkPreview() > should handle empty strings gracefully 1`] = `[Error: link-preview-js did not receive a valid url or text]`;
 
 exports[`#getLinkPreview() > should handle malformed urls gracefully 1`] = `[Error: link-preview-js did not receive a valid a url or text]`;
+
+exports[`#getLinkPreview() > should throw exception if URL is not valid 1`] = `[Error: link-preview-js unexpected status in response 404 Not Found]`;
