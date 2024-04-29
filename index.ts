@@ -3,7 +3,7 @@ import { fetch } from 'cross-fetch';
 import AbortController from 'abort-controller';
 import { CONSTANTS } from './constants';
 
-interface ILinkPreviewOptions {
+type ILinkPreviewOptions = {
   headers?: Record<string, string>;
   imagesPropertyType?: string;
   proxyUrl?: string;
@@ -11,9 +11,9 @@ interface ILinkPreviewOptions {
   followRedirects?: `follow` | `error` | `manual`;
   resolveDNSHost?: (url: string) => Promise<string>;
   handleRedirects?: (baseURL: string, forwardedURL: string) => boolean;
-}
+};
 
-interface IPreFetchedResource {
+type IPreFetchedResource = {
   headers?: Record<string, string>;
   status?: number;
   imagesPropertyType?: string;
@@ -21,44 +21,24 @@ interface IPreFetchedResource {
   url: string;
   data?: string;
   response?: Response;
-}
+};
 
-/**
- *
- * @param address
- */
-function throwOnLoopback(address: string) {
+const throwOnLoopback = (address: string) => {
   if (CONSTANTS.REGEX_LOOPBACK.test(address)) {
     throw new Error('SSRF request detected, trying to query host');
   }
-}
+};
 
-/**
- *
- * @param doc
- * @param type
- * @param attr
- */
-function metaTag(doc: cheerio.Root, type: string, attr: string) {
+const metaTag = (doc: cheerio.Root, type: string, attr: string) => {
   const nodes = doc(`meta[${attr}='${type}']`);
   return nodes.length ? nodes : null;
-}
+};
 
-/**
- *
- * @param doc
- * @param type
- * @param attr
- */
-function metaTagContent(doc: cheerio.Root, type: string, attr: string) {
+const metaTagContent = (doc: cheerio.Root, type: string, attr: string) => {
   return doc(`meta[${attr}='${type}']`).attr(`content`);
-}
+};
 
-/**
- *
- * @param doc
- */
-function getTitle(doc: cheerio.Root) {
+const getTitle = (doc: cheerio.Root) => {
   let title =
     metaTagContent(doc, `og:title`, `property`) ||
     metaTagContent(doc, `og:title`, `name`);
@@ -66,36 +46,24 @@ function getTitle(doc: cheerio.Root) {
     title = doc(`title`).text();
   }
   return title;
-}
+};
 
-/**
- *
- * @param doc
- */
-function getSiteName(doc: cheerio.Root) {
+const getSiteName = (doc: cheerio.Root) => {
   const siteName =
     metaTagContent(doc, `og:site_name`, `property`) ||
     metaTagContent(doc, `og:site_name`, `name`);
   return siteName;
-}
+};
 
-/**
- *
- * @param doc
- */
-function getDescription(doc: cheerio.Root) {
+const getDescription = (doc: cheerio.Root) => {
   const description =
     metaTagContent(doc, `description`, `name`) ||
     metaTagContent(doc, `Description`, `name`) ||
     metaTagContent(doc, `og:description`, `property`);
   return description;
-}
+};
 
-/**
- *
- * @param doc
- */
-function getMediaType(doc: cheerio.Root) {
+const getMediaType = (doc: cheerio.Root) => {
   const node = metaTag(doc, `medium`, `name`);
   if (node) {
     const content = node.attr(`content`);
@@ -105,19 +73,13 @@ function getMediaType(doc: cheerio.Root) {
     metaTagContent(doc, `og:type`, `property`) ||
     metaTagContent(doc, `og:type`, `name`)
   );
-}
+};
 
-/**
- *
- * @param doc
- * @param rootUrl
- * @param imagesPropertyType
- */
-function getImages(
+const getImages = (
   doc: cheerio.Root,
   rootUrl: string,
   imagesPropertyType?: string,
-) {
+) => {
   let images: string[] = [];
   let nodes: cheerio.Cheerio | null;
   let src: string | undefined;
@@ -165,13 +127,9 @@ function getImages(
   }
 
   return images;
-}
+};
 
-/**
- *
- * @param doc
- */
-function getVideos(doc: cheerio.Root) {
+const getVideos = (doc: cheerio.Root) => {
   const videos = [];
   let nodeTypes;
   let nodeSecureUrls;
@@ -232,24 +190,15 @@ function getVideos(doc: cheerio.Root) {
   }
 
   return videos;
-}
+};
 
 // returns default favicon (//hostname/favicon.ico) for a url
-/**
- *
- * @param rootUrl
- */
-function getDefaultFavicon(rootUrl: string) {
+const getDefaultFavicon = (rootUrl: string) => {
   return new URL(`/favicon.ico`, rootUrl);
-}
+};
 
 // returns an array of URLs to favicon images
-/**
- *
- * @param doc
- * @param rootUrl
- */
-function getFavicons(doc: cheerio.Root, rootUrl: string) {
+const getFavicons = (doc: cheerio.Root, rootUrl: string) => {
   const images = [];
   let nodes: cheerio.Cheerio | never[] = [];
   let src: string | undefined;
@@ -282,77 +231,50 @@ function getFavicons(doc: cheerio.Root, rootUrl: string) {
   }
 
   return images;
-}
+};
 
-/**
- *
- * @param url
- * @param contentType
- */
-function parseImageResponse(url: string, contentType: string) {
+const parseImageResponse = (url: string, contentType: string) => {
   return {
     url,
     mediaType: `image`,
     contentType,
     favicons: [getDefaultFavicon(url)],
   };
-}
+};
 
-/**
- *
- * @param url
- * @param contentType
- */
-function parseAudioResponse(url: string, contentType: string) {
+const parseAudioResponse = (url: string, contentType: string) => {
   return {
     url,
     mediaType: `audio`,
     contentType,
     favicons: [getDefaultFavicon(url)],
   };
-}
+};
 
-/**
- *
- * @param url
- * @param contentType
- */
-function parseVideoResponse(url: string, contentType: string) {
+const parseVideoResponse = (url: string, contentType: string) => {
   return {
     url,
     mediaType: `video`,
     contentType,
     favicons: [getDefaultFavicon(url)],
   };
-}
+};
 
-/**
- *
- * @param url
- * @param contentType
- */
-function parseApplicationResponse(url: string, contentType: string) {
+const parseApplicationResponse = (url: string, contentType: string) => {
   return {
     url,
     mediaType: `application`,
     contentType,
     favicons: [getDefaultFavicon(url)],
   };
-}
+};
 
-/**
- *
- * @param body
- * @param url
- * @param options
- * @param contentType
- */
-function parseTextResponse(
+const parseTextResponse = (
   body: string,
   url: string,
   options: ILinkPreviewOptions = {},
   contentType?: string,
-) {
+) => {
   const doc = cheerio.load(body);
 
   return {
@@ -366,30 +288,19 @@ function parseTextResponse(
     videos: getVideos(doc),
     favicons: getFavicons(doc, url),
   };
-}
+};
 
 // TODO: can use file-type package to determine mime type based on magic numbers
-/**
- *
- * @param body
- * @param url
- * @param options
- * @param contentType
- */
-function parseUnknownResponse(
+const parseUnknownResponse = (
   body: string,
   url: string,
   options: ILinkPreviewOptions = {},
   contentType?: string,
-) {
+) => {
   return parseTextResponse(body, url, options, contentType);
-}
+};
 
-/**
- *
- * @param response
- */
-async function getData(response: IPreFetchedResource) {
+const getData = async (response: IPreFetchedResource) => {
   if (response.data) {
     return response.data;
   }
@@ -399,17 +310,12 @@ async function getData(response: IPreFetchedResource) {
   }
 
   throw new Error(`link-preview-js could not fetch link information`);
-}
+};
 
-/**
- *
- * @param response
- * @param options
- */
-async function parseResponse(
+const parseResponse = async (
   response: IPreFetchedResource,
   options?: ILinkPreviewOptions,
-) {
+) => {
   try {
     // console.log("[link-preview-js] response", response);
     let contentType = response.response
@@ -482,19 +388,15 @@ async function parseResponse(
       ).toString()}`,
     );
   }
-}
+};
 
-/**
- * Parses the text, extracts the first link it finds and does a HTTP request
- * to fetch the website content, afterwards it tries to parse the internal HTML
- * and extract the information via meta tags
- * @param text string, text to be parsed
- * @param options ILinkPreviewOptions
- */
-export async function getLinkPreview(
+// Parses the text, extracts the first link it finds and does a HTTP request
+// to fetch the website content, afterwards it tries to parse the internal HTML
+// and extract the information via meta tags
+export const getLinkPreview = async (
   text: string,
   options?: ILinkPreviewOptions,
-) {
+) => {
   if (!text || typeof text !== `string`) {
     throw new Error(`link-preview-js did not receive a valid url or text`);
   }
@@ -585,19 +487,15 @@ export async function getLinkPreview(
   };
 
   return await parseResponse(normalizedResponse, options);
-}
+};
 
-/**
- * Skip the library fetching the website for you, instead pass a response object
- * from whatever source you get and use the internal parsing of the HTML to return
- * the necessary information
- * @param response Preview Response
- * @param options IPreviewLinkOptions
- */
-export async function getPreviewFromContent(
+// Skip the library fetching the website for you, instead pass a response object
+// from whatever source you get and use the internal parsing of the HTML to return
+// the necessary information
+export const getPreviewFromContent = async (
   response: IPreFetchedResource,
   options?: ILinkPreviewOptions,
-) {
+) => {
   if (!response || typeof response !== `object`) {
     throw new Error(`link-preview-js did not receive a valid response object`);
   }
@@ -607,4 +505,4 @@ export async function getPreviewFromContent(
   }
 
   return parseResponse(response, options);
-}
+};
