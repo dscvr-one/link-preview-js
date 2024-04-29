@@ -1,0 +1,57 @@
+name: 'Continuous Integration'
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  checks: write
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository 🎉
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup node env 📦
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          check-latest: true
+          cache: 'npm'
+
+      - name: Install dependencies 🚀
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Run linter(s) 👀
+        uses: wearerequired/lint-action@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          git_name: github-actions[bot]
+          git_email: github-actions[bot]@users.noreply.github.com
+          auto_fix: false
+          continue_on_error: false
+          neutral_check_on_warning: true
+          eslint: true
+          eslint_extensions: js,cjs,mjs,ts
+          prettier: true
+          prettier_extensions: js,cjs,mjs,ts
+
+      - name: Build the package 🎉
+        run: npm run build
+
+      - name: Run tests 🧪
+        uses: ospfranco/gh-jester@v1.0.13
+        with:
+          post-comment: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_CONTEXT: ${{ toJson(github) }}
