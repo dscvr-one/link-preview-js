@@ -1,5 +1,6 @@
+import { describe, expect, it } from 'vitest';
 import { getLinkPreview, getPreviewFromContent } from '../index';
-import prefetchedResponse from './sampleResponse.json';
+import prefetchedResponse from './sampleResponse.json' assert { type: 'json' };
 
 describe(`#getLinkPreview()`, () => {
   it(`should extract link info from just URL`, async () => {
@@ -272,14 +273,5 @@ describe(`#getPreviewFromContent`, () => {
     expect(linkInfo.videos.length).toEqual(0);
     expect(linkInfo.favicons[0]).not.toBe(``);
     expect(linkInfo.contentType.toLowerCase()).toEqual(`text/html`);
-  });
-});
-
-xdescribe(`simple test`, () => {
-  it('fetch my repo', async () => {
-    const linkInfo: any = await getLinkPreview('https://www.pravda.com.ua');
-    console.warn({ linkInfo });
-
-    expect(1).toEqual(2);
   });
 });

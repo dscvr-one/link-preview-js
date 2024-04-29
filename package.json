@@ -17,8 +17,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:ci": "node --experimental-vm-modules node_modules/jest/bin/jest.js --ci --outputFile=test_results.json --json",
+    "test": "vitest",
     "build": "tsc",
     "prepublishOnly": "tsc",
     "prepare": "is-ci || husky; npm run build",
@@ -41,7 +40,6 @@
     "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.2.2",
     "@types/cheerio": "^0.22.35",
-    "@types/jest": "^28.1.4",
     "@typescript-eslint/eslint-plugin": "^7.7.1",
     "@typescript-eslint/parser": "^7.7.1",
     "eslint": "^8.57.0",
@@ -53,12 +51,10 @@
     "eslint-plugin-security-node": "^1.1.4",
     "husky": "^9.0.11",
     "is-ci": "^3.0.1",
-    "jest": "^28.1.2",
     "lint-staged": "^15.2.2",
     "prettier": "^3.2.5",
-    "ts-jest": "^28.0.5",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vitest": "^1.5.2"
   },
   "publishConfig": {
     "access": "public",
