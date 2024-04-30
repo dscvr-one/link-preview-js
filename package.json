@@ -59,7 +59,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "registry": "https://npm.pkg.github.com"
+    "registry": "https://registry.npmjs.org"
   },
   "keywords": [
     "javascript",
@@ -75,7 +75,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git@github.com:dscvr-one/link-preview-js"
+    "url": "git+ssh://git@github.com/dscvr-one/link-preview-js.git"
   },
   "bugs": {
     "url": "https://github.com/dscvr-one/link-preview-js/issues"
