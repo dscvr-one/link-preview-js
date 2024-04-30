@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getLinkPreview, getPreviewFromContent } from '../index';
+import { getLinkPreview, getPreviewFromContent, LinkPreview } from '../index';
 import prefetchedResponse from './sampleResponse.json' assert { type: 'json' };
 
 describe(`#getLinkPreview()`, () => {
@@ -25,15 +25,17 @@ describe(`#getLinkPreview()`, () => {
   });
 
   it('returns charset of website', async () => {
-    const linkInfo: any = await getLinkPreview(`https://www.pravda.com.ua`);
+    const linkInfo: LinkPreview = await getLinkPreview(
+      `https://www.pravda.com.ua`,
+    );
 
     expect(linkInfo.url).toEqual(`https://www.pravda.com.ua/`);
-    expect(linkInfo.contentType.toLowerCase()).toEqual(`text/html`);
+    expect(linkInfo.contentType!.toLowerCase()).toEqual(`text/html`);
     expect(linkInfo.charset?.toLowerCase()).toEqual(`utf-8`);
   });
 
   it(`should extract link info from a URL with a newline`, async () => {
-    const linkInfo: any = await getLinkPreview(
+    const linkInfo: LinkPreview = await getLinkPreview(
       `
       https://www.youtube.com/watch?v=wuClZjOdT30
     `,
@@ -45,17 +47,17 @@ describe(`#getLinkPreview()`, () => {
     expect(linkInfo.siteName).toBeTruthy();
     expect(linkInfo.description).toBeTruthy();
     expect(linkInfo.mediaType).toEqual(`video.other`);
-    expect(linkInfo.images.length).toEqual(1);
-    expect(linkInfo.images[0]).toEqual(
+    expect(linkInfo.images!.length).toEqual(1);
+    expect(linkInfo.images![0]).toEqual(
       `https://i.ytimg.com/vi/wuClZjOdT30/maxresdefault.jpg`,
     );
-    expect(linkInfo.videos.length).toEqual(0);
-    expect(linkInfo.favicons[0]).not.toBe(``);
-    expect(linkInfo.contentType.toLowerCase()).toEqual(`text/html`);
+    expect(linkInfo.videos!.length).toEqual(0);
+    expect(linkInfo.favicons![0]).not.toBe(``);
+    expect(linkInfo.contentType!.toLowerCase()).toEqual(`text/html`);
   });
 
   it(`should extract link info from just text with a URL`, async () => {
-    const linkInfo: any = await getLinkPreview(
+    const linkInfo: LinkPreview = await getLinkPreview(
       `This is some text blah blah https://www.youtube.com/watch?v=wuClZjOdT30 and more text`,
       { headers: { 'Accept-Language': `en-US` } },
     );
@@ -65,13 +67,13 @@ describe(`#getLinkPreview()`, () => {
     expect(linkInfo.siteName).toEqual(`YouTube`);
     expect(linkInfo.description).toBeTruthy();
     expect(linkInfo.mediaType).toEqual(`video.other`);
-    expect(linkInfo.images.length).toEqual(1);
-    expect(linkInfo.images[0]).toEqual(
+    expect(linkInfo.images!.length).toEqual(1);
+    expect(linkInfo.images![0]).toEqual(
       `https://i.ytimg.com/vi/wuClZjOdT30/maxresdefault.jpg`,
     );
-    expect(linkInfo.videos.length).toEqual(0);
-    expect(linkInfo.favicons[0]).toBeTruthy();
-    expect(linkInfo.contentType.toLowerCase()).toEqual(`text/html`);
+    expect(linkInfo.videos!.length).toEqual(0);
+    expect(linkInfo.favicons![0]).toBeTruthy();
+    expect(linkInfo.contentType!.toLowerCase()).toEqual(`text/html`);
   });
 
   it(`should handle audio urls`, async () => {
@@ -151,7 +153,7 @@ describe(`#getLinkPreview()`, () => {
 
   it.skip(`should handle a proxy url option`, async () => {
     // origin header is required by cors-anywhere
-    const linkInfo: any = await getLinkPreview(
+    const linkInfo: LinkPreview = await getLinkPreview(
       `https://www.youtube.com/watch?v=wuClZjOdT30`,
       {
         proxyUrl: `https://cors-anywhere.herokuapp.com/`,
@@ -167,13 +169,13 @@ describe(`#getLinkPreview()`, () => {
     expect(linkInfo.title).toEqual(`Geography Now! Germany`);
     expect(linkInfo.description).toBeTruthy();
     expect(linkInfo.mediaType).toEqual(`video.other`);
-    expect(linkInfo.images.length).toEqual(1);
-    expect(linkInfo.images[0]).toEqual(
+    expect(linkInfo.images!.length).toEqual(1);
+    expect(linkInfo.images![0]).toEqual(
       `https://i.ytimg.com/vi/wuClZjOdT30/maxresdefault.jpg`,
     );
-    expect(linkInfo.videos.length).toEqual(0);
-    expect(linkInfo.favicons[0]).not.toBe(``);
-    expect(linkInfo.contentType.toLowerCase()).toEqual(`text/html`);
+    expect(linkInfo.videos!.length).toEqual(0);
+    expect(linkInfo.favicons![0]).not.toBe(``);
+    expect(linkInfo.contentType!.toLowerCase()).toEqual(`text/html`);
   });
 
   it('should timeout (default 3s) with infinite loading link', async () => {
@@ -276,7 +278,7 @@ describe(`#getLinkPreview()`, () => {
 
 describe(`#getPreviewFromContent`, () => {
   it(`Basic parsing`, async () => {
-    const linkInfo: any = await getPreviewFromContent({
+    const linkInfo: LinkPreview = await getPreviewFromContent({
       ...prefetchedResponse,
       response: new Response(prefetchedResponse.data, {
         headers: prefetchedResponse.headers,
@@ -288,12 +290,12 @@ describe(`#getPreviewFromContent`, () => {
     expect(linkInfo.title).toEqual(`Geography Now! Germany`);
     expect(linkInfo.description).toBeTruthy();
     expect(linkInfo.mediaType).toEqual(`video.other`);
-    expect(linkInfo.images.length).toEqual(1);
-    expect(linkInfo.images[0]).toEqual(
+    expect(linkInfo.images!.length).toEqual(1);
+    expect(linkInfo.images![0]).toEqual(
       `https://i.ytimg.com/vi/wuClZjOdT30/maxresdefault.jpg`,
     );
-    expect(linkInfo.videos.length).toEqual(0);
-    expect(linkInfo.favicons[0]).not.toBe(``);
-    expect(linkInfo.contentType.toLowerCase()).toEqual(`text/html`);
+    expect(linkInfo.videos!.length).toEqual(0);
+    expect(linkInfo.favicons![0]).not.toBe(``);
+    expect(linkInfo.contentType!.toLowerCase()).toEqual(`text/html`);
   });
 });
