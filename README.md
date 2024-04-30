@@ -220,6 +220,32 @@ in the HTTP response (see below for variations of response). Rejects with an err
 }
 ```
 
+## Ship.js Automated Release(s) 🏗
+
+- Once all features/bugfixes are deployed on `main`
+- Run `npm run release` & ship.js will trigger a build with updated [CHANGELOG](./CHANGELOG.md) & proper [git tags](https://github.com/dscvr-one/link-preview-js/tags)
+- Follow the guide from the automated PR from Ship.js
+- Once you **Squash & Merge** the automated PR, wait for the [Ship.js trigger](https://github.com/dscvr-one/link-preview-js/actions/workflows/shipjs-trigger.yml) workflow to run successfully.
+
+## Branching Strategy 🎋
+
+- Create your feature branch from `main` branch, eg. `chore/DCP-123-update-config`
+- Create a new PR from `chore/DCP-123-update-config` to `main`
+- Once the PR is merged into `main`, follow the [Ship.js Automated Release(s)](#shipjs-automated-releases-) section
+
+## Contributing
+
+1. Create your feature branch from `main` (`git checkout -b chore/DCP-123-update-config`)
+2. Commit your changes (`git commit -Sam 'feat: add feature'`)
+3. Push to the branch (`git push origin chore/DCP-123-update-config`)
+4. Create a new [Pull Request](https://github.com/dscvr-one/link-preview-js/compare)
+
+_Note_:
+
+1. Please contribute using [GitHub Flow](https://web.archive.org/web/20191104103724/https://guides.github.com/introduction/flow/)
+2. Commits & PRs will be allowed only if the commit messages & PR titles follow the [conventional commit standard](https://www.conventionalcommits.org/), _read more about it [here](https://github.com/conventional-changelog/commitlint/tree/master/%40commitlint/config-conventional#type-enum)_
+3. PS. Ensure your commits are signed. _[Read why](https://withblue.ink/2020/05/17/how-and-why-to-sign-git-commits.html)_
+
 ## License
 
 MIT license

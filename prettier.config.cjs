@@ -1,13 +1,13 @@
 module.exports = {
-  $schema: "http://json.schemastore.org/prettierrc",
+  $schema: 'http://json.schemastore.org/prettierrc',
   semi: true,
-  arrowParens: "always",
+  arrowParens: 'always',
   singleQuote: true,
-  trailingComma: "all",
+  trailingComma: 'all',
   bracketSpacing: true,
-  htmlWhitespaceSensitivity: "css",
+  htmlWhitespaceSensitivity: 'css',
   insertPragma: false,
   tabWidth: 2,
   useTabs: false,
-  endOfLine: "lf",
+  endOfLine: 'lf',
 };
